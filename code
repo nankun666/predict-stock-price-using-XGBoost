@@ -1,0 +1,137 @@
+!pip install pandas requests xgboost scikit-learn matplotlib
+from requests import get
+import sys  # Import sys to use sys.argv
+import os
+import argparse
+import pandas as pd
+from xgboost import XGBRegressor
+from sklearn.model_selection import train_test_split
+import matplotlib.pyplot as plt
+from datetime import datetime
+from sklearn.model_selection import cross_val_score
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+def fetch_etf_data(symbol, api_key):
+    """Fetch ETF historical data from Alpha Vantage API."""
+    response = get(f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={symbol}&apikey={api_key}")
+    data = response.json().get('Time Series (Daily)', {})
+ 
+    # Transform data into a DataFrame
+    df = pd.DataFrame.from_dict(data, orient='index')
+    df.columns = ['Open', 'High', 'Low', 'Close', 'Volume']
+    df = df.astype(float)  # Convert to float
+    df.index = pd.to_datetime(df.index)  # Convert index to datetime
+    return df
+
+def preprocess_data(df):
+    """Preprocess the ETF data."""
+    df = df.sort_index()  # Sort by date
+    df.dropna(inplace=True)  # Remove any missing values
+    return df
+
+def create_lagged_features(df, n_lags=10):
+    """Create lagged features for the dataset."""
+    for i in range(1, n_lags + 1):
+        df[f'Close_Lag_{i}'] = df['Close'].shift(i)
+        df[f'Open_Lag_{i}'] = df['Open'].shift(i)
+        df[f'High_Lag_{i}'] = df['High'].shift(i)
+        df[f'Low_Lag_{i}'] = df['Low'].shift(i)
+    
+    df.dropna(inplace=True)  # Remove rows with NaN values caused by shifting
+    return df
+
+def model_data(data):
+    """Prepare features and target for the model."""
+    lagged_features = [col for col in data.columns if 'Lag' in col]
+    X = data[lagged_features]  # Use only the lagged features
+    y = data['Close']
+    return X, y
+
+def train_model(X, y):
+    """Train the XGBoost model."""
+    # Split the data into training and testing sets
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1, random_state=42)
+    
+    # Create and fit the model
+    model = XGBRegressor()
+    model.fit(X_train, y_train)
+    
+    # Return the model and data for predictions
+    return model, X_train, X_test, y_train, y_test
+
+def evaluate_model(model, X_test, y_test):
+    """Evaluate the model on the test data and print evaluation metrics."""
+    # Make predictions
+    predictions_test = model.predict(X_test)
+    
+    # Calculate evaluation metrics
+    mae = mean_absolute_error(y_test, predictions_test)
+    mse = mean_squared_error(y_test, predictions_test)
+    r2 = r2_score(y_test, predictions_test)
+    return mae, mse, r2
+
+def visualize_predictions(X, y, model):
+    """Visualize the model predictions against actual prices."""
+    predictions = model.predict(X)
+    plt.figure(figsize=(14, 7))
+    '''plt.plot(y.index, y, label='Actual Prices', color='blue', marker='o')
+    plt.plot(y.index, predictions, label='Predicted Prices', color='orange', marker='x')'''
+    plt.plot(y.index[-len(predictions):], y[-len(predictions):], label='Actual Prices', color='blue', marker='o')
+    plt.plot(y.index[-len(predictions):], predictions, label='Predicted Prices', color='orange', marker='x')
+    plt.title('ETF Price Prediction')
+    plt.xlabel('Date')
+    plt.ylabel('Price')
+    plt.xticks(rotation=45)  # Rotate x-axis labels for better visibility
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()  # Adjust layout to prevent clipping
+    plt.show()
+
+if __name__ == '__main__':
+    # Check if running in an interactive environment or script
+    if 'ipykernel' in sys.modules:
+        # Jupyter or Interactive
+        symbol = input("Please enter the stock symbol: ")
+    else:
+        # Command-line execution with argparse
+        parser = argparse.ArgumentParser(description='Retrieve ETF data using Alpha Vantage API.')
+        parser.add_argument('--symbol', type=str, help='The ETF symbol (e.g., SPY)', required=True)
+        args = parser.parse_args(sys.argv[1:])
+        symbol = args.symbol
+
+    # Directly set the API key for testing
+    api_key = 'Q16M72RJSY0R6TZJ'  # Replace with your actual API key
+    
+    # Fetch ETF data
+    etf_data = fetch_etf_data(symbol, api_key)
+    if etf_data is None:
+        sys.exit("Error: Unable to fetch ETF data. Exiting.")
+        
+    # Preprocess the data
+    processed_data = preprocess_data(etf_data)
+    
+    # Create lagged features
+    lagged_data = create_lagged_features(processed_data)
+    
+    # Prepare the model data
+    X, y = model_data(lagged_data)
+    
+    # Train the model
+    model, X_train, X_test, y_train, y_test = train_model(X, y)
+    
+    # Visualize predictions
+    visualize_predictions(X, y, model)  
+    
+    # Evaluate the model
+    mae, mse, r2 = evaluate_model(model, X_test, y_test)
+    
+    # Predict today's closing price
+    latest_lagged_features = lagged_data.iloc[-1][X.columns].values.reshape(1, -1)
+
+    # Make the prediction
+    predicted_close_price_today = model.predict(latest_lagged_features)[0]
+
+    today_date = pd.Timestamp.today().date()
+    print(f"The predicted closing price for {symbol} on {today_date} is ${predicted_close_price_today:.2f}.")
+    print(f"Mean Absolute Error (MAE): {mae:.2f}")
+    print(f"Mean Squared Error (MSE): {mse:.2f}")
+    print(f"R² Score: {r2:.2f}") 
