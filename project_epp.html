@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Nankun "Bella" Liang - Project Overview</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Noto+Sans+SC:wght@100..900&family=Source+Sans+3:wght@200..900&display=swap" rel="stylesheet">
+    <style>
+        body, html {
+            font-family: "Source Sans 3", "Noto Sans SC", sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: auto;
+            background-color: #e9eff4; /* Soft background color */
+        }
+        .container {
+            width: 100%;
+            max-width: 800px; /* Set a maximum width for the container */
+            background-color: #cee6f9; /* Blue background */
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #0073b1; /* Title color */
+        }
+        .section {
+            background-color: #ffffff; /* White background for each section */
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #0073b1; /* Section title color */
+            margin-top: 0;
+        }
+        p {
+            color: #333; /* Dark text for readability */
+            line-height: 1.6; /* Improved line spacing */
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background-color: #ffffff; /* Form background */
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        label {
+            font-size: 18px;
+        }
+        input[type="text"] {
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #cccccc;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px;
+            font-size: 18px;
+            background-color: #0073b1;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0073b1;
+        }
+        .result {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 18px;
+        }
+        .error {
+            color: red;
+        }
+        .img-container {
+          padding: 1em;  height: 100%;
+          margin-top: -8px;
+        }
+         .img {
+          max-width: 100vh; /* Limit image size */
+          height: auto; /* Keep aspect ratio */
+        }
+
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="section">
+            <h1>Equity Price Predictor</h1>
+            <form id="predictForm">
+                <label for="symbol">Enter Equity Symbol:</label>
+                <input type="text" id="symbol" name="symbol" placeholder="e.g., SPY" required>
+                <button type="submit">Predict Price</button>
+            </form>
+            <div class="result" id="result"></div>
+        </div>
+
+    <div class="section">
+            <h2>Overview</h2>
+            <p>This application focuses on predicting daily equity prices through XGBoost model. The analysis leverages the S&P 500 and NASDAQ 100 indices as initial training data to reflect broader market trends.</p>
+        </div>
+
+        <div class="section">
+            <h2>Data Preparation</h2>
+            <p>Daily updated historical trading data, including open, high, low, close prices, and trading volume, was collected through Restful API. A 14-day lagged feature was engineered to capture relevant trends, allowing the model to utilize past performance in predicting current prices.</p>
+        </div>
+
+        <div class="section">
+            <h2>Dynamic Model Development</h2>
+            <p>A flexible XGBoost model was implemented to generate predictions based on user-defined stock symbols, enabling tailored forecasting. The model achieved an impressive R² score of 0.91, indicating a high level of predictive accuracy. However, performance variance was observed across different time periods.</p>
+        </div>
+
+        <div class="section">
+            <h2>Feature Engineering</h2>
+            <p>To reduce the impact of time series characteristics and periodic patterns, moving averages were introduced as additional features. A systematic approach was employed to evaluate the optimal combination of lagged features (ranging from 1 to 14 days) and moving averages (from 1 to 30 days). Heatmap analysis identified the optimal configuration of a 15-day and 24-day moving average in conjunction with a 10-day lag as yielding superior performance.</p>
+            <div class="img-container">
+                <img class="img" src="/img/project_epp_heatmap.jpg" />
+              </div>
+        
+        </div>
+
+        <div class="section">
+            <h2>Model Evaluation and Optimization</h2>
+            <p>Mean Absolute Percentage Error (MAPE) was utilized as the primary evaluation metric. Following the implementation of moving averages, the MAPE improved significantly to 0.008. To address the identified issue of overfitting, regularization techniques (L1 or L2) were considered, and cross-validation methods were applied to enhance model stability.</p>
+            <div class="img-container">
+                <img class="img" src="/img/project_epp_prediction.jpg" />
+              </div>
+        </div>
+
+        <div class="section">
+            <h2>Integration of Features</h2>
+            <p>Future iterations will explore the incorporation of additional financial indicators, such as technical indicators (e.g., RSI, MACD) and fundamental metrics (e.g., P/E ratio), to further enhance predictive accuracy and robustness.</p>
+        </div>
+
+        <div class="section">
+            <h2>Backtesting Framework</h2>
+            <p>A backtesting framework will be developed to assess the model's performance on unseen data over time, validating its effectiveness in real-world trading scenarios.</p>
+        </div>
+
+        <div class="section">
+            <h2>Insights</h2>
+            <p>An analysis of feature importance will be conducted to identify the most influential variables in the prediction process, enhancing the model's interpretability. Additionally, SHAP (SHapley Additive exPlanations) values will be utilized to provide insights into individual predictions.</p>
+        </div>
+        
+
+
+
+    </div>
+
+    <script>
+        document.getElementById('predictForm').addEventListener('submit', async function(event) {
+            event.preventDefault(); // Prevent the default form submission
+
+            const symbol = document.getElementById('symbol').value;
+            const response = await fetch(`/predict?symbol=${symbol}`); // Call your backend
+            const data = await response.json();
+
+            // Display the result
+            const resultDiv = document.getElementById('result');
+            if (data.error) {
+                resultDiv.innerHTML = `<p class="error">Error: ${data.error}</p>`;
+            } else {
+                resultDiv.innerHTML = `<p>The predicted closing price for ${symbol} is $${data.price.toFixed(2)}</p>`;
+            }
+        });
+    </script>
+</body>
+</html>
